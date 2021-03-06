@@ -1,27 +1,11 @@
 pragma solidity 0.5.0;
 
-import "./IStaking.sol";
-import "./TokenPool.sol";
+import "./interface/IERC20.sol";
+import "./interface/IStaking.sol";
 import "./common/Ownable.sol";
-import "./common/IERC20.sol";
 import "./common/SafeMath.sol";
+import "./TokenPool.sol";
 
-/**
- * @title Token Geyser
- * @dev A smart-contract based mechanism to distribute tokens over time, inspired loosely by
- *      Compound and Uniswap.
- *
- *      Distribution tokens are added to a locked pool in the contract and become unlocked over time
- *      according to a once-configurable unlock schedule. Once unlocked, they are available to be
- *      claimed by users.
- *
- *      A user may deposit tokens to accrue ownership share over the unlocked pool. This owner share
- *      is a function of the number of tokens deposited as well as the length of time deposited.
- *      Specifically, a user's share of the currently-unlocked pool equals their "deposit-seconds"
- *      divided by the global "deposit-seconds". This aligns the new token distribution with long
- *      term supporters of the project, addressing one of the major drawbacks of simple airdrops.
- *
- */
 contract TokenGeyser is IStaking, Ownable {
     using SafeMath for uint256;
 

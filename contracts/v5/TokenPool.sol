@@ -1,6 +1,6 @@
 pragma solidity 0.5.0;
 
-import "./common/IERC20.sol";
+import "./interface/IERC20.sol";
 import "./common/Ownable.sol";
 
 /**
