@@ -26,9 +26,12 @@ contract OmsShare is Context, IERC20, Ownable {
     string private _symbol = 'OMSS';
     uint8 private _decimals = 9;
 
-    constructor () public {
-        _rOwned[_msgSender()] = _rTotal;
-        emit Transfer(address(0), _msgSender(), _tTotal);
+    constructor (address reserve_) public {
+        _rOwned[_msgSender()] = _rTotal.div(2);
+        _rOwned[reserve_] = _rTotal.div(2);
+
+        emit Transfer(address(0), _msgSender(), _tTotal.div(2));
+        emit Transfer(address(0), reserve_, _tTotal.div(2));
     }
 
     function name() public view returns (string memory) {
