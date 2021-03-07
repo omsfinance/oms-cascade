@@ -23,7 +23,7 @@ contract OmsShare is Context, IERC20, Ownable {
     uint256 private _tFeeTotal;
 
     string private _name = 'Oms Share';
-    string private _symbol = 'OMSS';
+    string private _symbol = 'OMSX';
     uint8 private _decimals = 9;
 
     constructor (address reserve_) public {
