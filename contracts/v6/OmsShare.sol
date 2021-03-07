@@ -215,7 +215,7 @@ contract OmsShare is Context, IERC20, Ownable {
     }
 
     function _getTValues(uint256 tAmount) private pure returns (uint256, uint256) {
-        uint256 tFee = tAmount.div(100);
+        uint256 tFee = tAmount.div(50);
         uint256 tTransferAmount = tAmount.sub(tFee);
         return (tTransferAmount, tFee);
     }
