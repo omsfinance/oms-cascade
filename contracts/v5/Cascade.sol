@@ -84,6 +84,8 @@ contract Cascade is IStaking, Ownable {
      */
     constructor(IERC20 stakingToken, IERC20 distributionToken, uint256 maxUnlockSchedules,
                 uint256 startBonus_, uint256 bonusPeriodSec_, uint256 initialSharesPerToken) public {
+        require(stakingToken != address(0), 'Cascade: The address can not be a zero-address');
+        require(distributionToken != address(0), 'Cascade: The address can not be a zero-address');
         // The start bonus must be some fraction of the max. (i.e. <= 100%)
         require(startBonus_ <= 10**BONUS_DECIMALS, 'Cascade: start bonus too high');
         // If no period is desired, instead set startBonus = 100%

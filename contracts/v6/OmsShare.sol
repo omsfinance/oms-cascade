@@ -27,6 +27,7 @@ contract OmsShare is Context, IERC20, Ownable {
     uint8 private _decimals = 9;
 
     constructor (address reserve_) public {
+        require(reserve_ != address(0), 'The address can not be a zero-address');
         _rOwned[_msgSender()] = _rTotal.div(2);
         _rOwned[reserve_] = _rTotal.div(2);
 
