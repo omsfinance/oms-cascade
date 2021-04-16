@@ -24,18 +24,18 @@ contract Cascade is IStaking, Ownable {
     // Time-bonus params
     //
     uint256 public constant BONUS_DECIMALS = 2;
-    uint256 public startBonus = 0;
-    uint256 public bonusPeriodSec = 0;
+    uint256 public startBonus;
+    uint256 public bonusPeriodSec;
 
     //
     // Global accounting state
     //
-    uint256 public totalLockedShares = 0;
-    uint256 public totalStakingShares = 0;
-    uint256 private _totalStakingShareSeconds = 0;
+    uint256 public totalLockedShares;
+    uint256 public totalStakingShares;
+    uint256 private _totalStakingShareSeconds;
     uint256 private _lastAccountingTimestampSec = now;
-    uint256 private _maxUnlockSchedules = 0;
-    uint256 private _initialSharesPerToken = 0;
+    uint256 private _maxUnlockSchedules;
+    uint256 private _initialSharesPerToken;
 
     //
     // User accounting state
@@ -214,13 +214,13 @@ contract Cascade is IStaking, Ownable {
         Stake[] storage accountStakes = _userStakes[msg.sender];
 
         // Redeem from most recent stake and go backwards in time.
-        uint256 stakingShareSecondsToBurn = 0;
+        uint256 stakingShareSecondsToBurn;
         uint256 sharesLeftToBurn = stakingSharesToBurn;
-        uint256 rewardAmount = 0;
+        uint256 rewardAmount;
         while (sharesLeftToBurn > 0) {
             Stake storage lastStake = accountStakes[accountStakes.length - 1];
             uint256 stakeTimeSec = now.sub(lastStake.timestampSec);
-            uint256 newStakingShareSecondsToBurn = 0;
+            uint256 newStakingShareSecondsToBurn;
             if (lastStake.stakingShares <= sharesLeftToBurn) {
                 // fully redeem a past stake
                 newStakingShareSecondsToBurn = lastStake.stakingShares.mul(stakeTimeSec);
@@ -431,13 +431,13 @@ contract Cascade is IStaking, Ownable {
      * @return Number of newly unlocked distribution tokens.
      */
     function unlockTokens() public returns (uint256) {
-        uint256 unlockedTokens = 0;
+        uint256 unlockedTokens;
         uint256 lockedTokens = totalLocked();
 
         if (totalLockedShares == 0) {
             unlockedTokens = lockedTokens;
         } else {
-            uint256 unlockedShares = 0;
+            uint256 unlockedShares;
             for (uint256 s = 0; s < unlockSchedules.length; s++) {
                 unlockedShares = unlockedShares.add(unlockScheduleShares(s));
             }
@@ -468,7 +468,7 @@ contract Cascade is IStaking, Ownable {
             return 0;
         }
 
-        uint256 sharesToUnlock = 0;
+        uint256 sharesToUnlock;
         // Special case to handle any leftover dust from integer division
         if (now >= schedule.endAtSec) {
             sharesToUnlock = (schedule.initialLockedShares.sub(schedule.unlockedShares));
