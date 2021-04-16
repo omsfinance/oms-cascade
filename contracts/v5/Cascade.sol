@@ -400,7 +400,7 @@ contract Cascade is IStaking, Ownable {
      * @param durationSec Length of time to linear unlock the tokens.
      */
     function lockTokens(uint256 amount, uint256 durationSec) external onlyOwner {
-        require(unlockSchedules.length < _maxUnlockSchedules,
+        require(unlockSchedules.length <= _maxUnlockSchedules,
             'Cascade: reached maximum unlock schedules');
 
         // Update lockedTokens amount before using it in computations after.
