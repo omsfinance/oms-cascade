@@ -133,16 +133,15 @@ contract Cascade is IStaking, Ownable {
      * @param data Not used.
      */
     function stakeFor(address user, uint256 amount, bytes calldata data) external onlyOwner {
-        _stakeFor(msg.sender, user, amount);
+        _stakeFor(user, amount);
     }
 
     /**
      * @dev Private implementation of staking methods.
-     * @param staker User address who deposits tokens to stake.
      * @param beneficiary User address who gains credit for this stake operation.
      * @param amount Number of deposit tokens to stake.
      */
-    function _stakeFor(address staker, address beneficiary, uint256 amount) private {
+    function _stakeFor(address beneficiary, uint256 amount) private {
         require(amount > 0, 'Cascade: stake amount is zero');
         require(beneficiary != address(0), 'Cascade: beneficiary is zero address');
         require(totalStakingShares == 0 || totalStaked() > 0,
@@ -169,7 +168,7 @@ contract Cascade is IStaking, Ownable {
         // _lastAccountingTimestampSec = now;
 
         // interactions
-        require(_stakingPool.token().transferFrom(staker, address(_stakingPool), amount),
+        require(_stakingPool.token().transferFrom(msg.sender, address(_stakingPool), amount),
             'Cascade: transfer into staking pool failed');
 
         emit Staked(beneficiary, amount, totalStakedFor(beneficiary), "");
