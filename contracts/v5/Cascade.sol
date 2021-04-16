@@ -437,7 +437,8 @@ contract Cascade is IStaking, Ownable {
             unlockedTokens = lockedTokens;
         } else {
             uint256 unlockedShares;
-            for (uint256 s = 0; s < unlockSchedules.length; s++) {
+            uint unlockScheduleLength = unlockSchedules.length;
+            for (uint256 s = 0; s < unlockScheduleLength; s++) {
                 unlockedShares = unlockedShares.add(unlockScheduleShares(s));
             }
             unlockedTokens = unlockedShares.mul(lockedTokens).div(totalLockedShares);
