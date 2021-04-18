@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "lite-server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run95": "eth95 ./build/contracts"
+    "run95": "eth95 ./build/contracts -p 3002"
   },
   "author": "",
   "license": "ISC",

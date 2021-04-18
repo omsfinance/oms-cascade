@@ -1,6 +1,7 @@
 pragma solidity 0.5.0;
 
 import "./interface/IERC20.sol";
+import "./interface/SafeERC20.sol";
 import "./interface/IStaking.sol";
 import "./common/Ownable.sol";
 import "./common/SafeMath.sol";
@@ -8,6 +9,7 @@ import "./TokenPool.sol";
 
 contract Cascade is IStaking, Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
     event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
@@ -84,8 +86,8 @@ contract Cascade is IStaking, Ownable {
      */
     constructor(IERC20 stakingToken, IERC20 distributionToken, uint256 maxUnlockSchedules,
                 uint256 startBonus_, uint256 bonusPeriodSec_, uint256 initialSharesPerToken) public {
-        require(stakingToken != address(0), 'Cascade: The address can not be a zero-address');
-        require(distributionToken != address(0), 'Cascade: The address can not be a zero-address');
+        require(address(stakingToken) != address(0), 'Cascade: The address can not be a zero-address');
+        require(address(distributionToken) != address(0), 'Cascade: The address can not be a zero-address');
         // The start bonus must be some fraction of the max. (i.e. <= 100%)
         require(startBonus_ <= 10**BONUS_DECIMALS, 'Cascade: start bonus too high');
         // If no period is desired, instead set startBonus = 100%
@@ -123,7 +125,7 @@ contract Cascade is IStaking, Ownable {
      * @param data Not used.
      */
     function stake(uint256 amount, bytes calldata data) external {
-        _stakeFor(msg.sender, msg.sender, amount);
+        _stakeFor(msg.sender, amount);
     }
 
     /**
@@ -168,9 +170,8 @@ contract Cascade is IStaking, Ownable {
         // _lastAccountingTimestampSec = now;
 
         // interactions
-        require(_stakingPool.token().transferFrom(msg.sender, address(_stakingPool), amount),
-            'Cascade: transfer into staking pool failed');
-
+        _stakingPool.token().safeTransferFrom(msg.sender, address(_stakingPool), amount);
+        
         emit Staked(beneficiary, amount, totalStakedFor(beneficiary), "");
     }
 
@@ -419,8 +420,8 @@ contract Cascade is IStaking, Ownable {
 
         totalLockedShares = totalLockedShares.add(mintedLockedShares);
 
-        require(_lockedPool.token().transferFrom(msg.sender, address(_lockedPool), amount),
-            'Cascade: transfer into locked pool failed');
+        _lockedPool.token().safeTransferFrom(msg.sender, address(_lockedPool), amount);
+
         emit TokensLocked(amount, durationSec, totalLocked());
     }
 
