@@ -1,6 +1,7 @@
 pragma solidity 0.5.0;
 
 import "./interface/IERC20.sol";
+import "./interface/SafeERC20.sol";
 import "./common/Ownable.sol";
 
 /**
@@ -9,6 +10,7 @@ import "./common/Ownable.sol";
  * needs to hold multiple distinct pools of the same token.
  */
 contract TokenPool is Ownable {
+    using SafeERC20 for IERC20;
     IERC20 public token;
 
     constructor(IERC20 _token) public {
@@ -20,7 +22,8 @@ contract TokenPool is Ownable {
     }
 
     function transfer(address to, uint256 value) external onlyOwner returns (bool) {
-        return token.transfer(to, value);
+        token.safeTransfer(to, value);
+        return true;
     }
 
     function rescueFunds(address tokenToRescue, address to, uint256 amount) external onlyOwner returns (bool) {
