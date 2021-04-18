@@ -122,9 +122,8 @@ contract Cascade is IStaking, Ownable {
     /**
      * @dev Transfers amount of deposit tokens from the user.
      * @param amount Number of deposit tokens to stake.
-     * @param data Not used.
      */
-    function stake(uint256 amount, bytes calldata data) external {
+    function stake(uint256 amount) external {
         _stakeFor(msg.sender, amount);
     }
 
@@ -132,9 +131,8 @@ contract Cascade is IStaking, Ownable {
      * @dev Transfers amount of deposit tokens from the caller on behalf of user.
      * @param user User address who gains credit for this stake operation.
      * @param amount Number of deposit tokens to stake.
-     * @param data Not used.
      */
-    function stakeFor(address user, uint256 amount, bytes calldata data) external onlyOwner {
+    function stakeFor(address user, uint256 amount) external onlyOwner {
         _stakeFor(user, amount);
     }
 
@@ -179,9 +177,8 @@ contract Cascade is IStaking, Ownable {
      * @dev Unstakes a certain amount of previously deposited tokens. User also receives their
      * alotted number of distribution tokens.
      * @param amount Number of deposit tokens to unstake / withdraw.
-     * @param data Not used.
      */
-    function unstake(uint256 amount, bytes calldata data) external {
+    function unstake(uint256 amount) external {
         _unstake(amount);
     }
 
