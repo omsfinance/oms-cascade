@@ -56,11 +56,14 @@ contract Cascade is IStaking, Ownable {
         uint256 lastAccountingTimestampSec;
     }
 
-    // Aggregated staking values per user
-    mapping(address => UserTotals) private _userTotals;
+    struct User {
+        // Aggregated staking values per user
+        UserTotals userTotals;
+        // The collection of stakes for each user. Ordered by timestamp, earliest to latest.
+        Stake[] userStakes;
+    }
 
-    // The collection of stakes for each user. Ordered by timestamp, earliest to latest.
-    mapping(address => Stake[]) private _userStakes;
+    mapping(address => User) private _users;
 
     //
     // Locked/Unlocked Accounting state
@@ -155,12 +158,12 @@ contract Cascade is IStaking, Ownable {
         updateAccounting();
 
         // 1. User Accounting
-        UserTotals storage totals = _userTotals[beneficiary];
+        UserTotals storage totals = _users[beneficiary].userTotals;
         totals.stakingShares = totals.stakingShares.add(mintedStakingShares);
         totals.lastAccountingTimestampSec = now;
 
         Stake memory newStake = Stake(mintedStakingShares, now);
-        _userStakes[beneficiary].push(newStake);
+        _users[beneficiary].userStakes.push(newStake);
 
         // 2. Global Accounting
         totalStakingShares = totalStakingShares.add(mintedStakingShares);
@@ -207,8 +210,8 @@ contract Cascade is IStaking, Ownable {
         require(stakingSharesToBurn > 0, 'Cascade: Unable to unstake amount this small');
 
         // 1. User Accounting
-        UserTotals storage totals = _userTotals[msg.sender];
-        Stake[] storage accountStakes = _userStakes[msg.sender];
+        UserTotals storage totals = _users[msg.sender].userTotals;
+        Stake[] storage accountStakes = _users[msg.sender].userStakes;
 
         // Redeem from most recent stake and go backwards in time.
         uint256 stakingShareSecondsToBurn;
@@ -299,7 +302,7 @@ contract Cascade is IStaking, Ownable {
      */
     function totalStakedFor(address addr) public view returns (uint256) {
         return totalStakingShares > 0 ?
-            totalStaked().mul(_userTotals[addr].stakingShares).div(totalStakingShares) : 0;
+            totalStaked().mul(_users[addr].userTotals.stakingShares).div(totalStakingShares) : 0;
     }
 
     /**
@@ -342,7 +345,7 @@ contract Cascade is IStaking, Ownable {
         _lastAccountingTimestampSec = now;
 
         // User Accounting
-        UserTotals storage totals = _userTotals[msg.sender];
+        UserTotals storage totals = _users[msg.sender].userTotals;
         uint256 newUserStakingShareSeconds =
             now
             .sub(totals.lastAccountingTimestampSec)
