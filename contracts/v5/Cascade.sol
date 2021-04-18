@@ -199,7 +199,7 @@ contract Cascade is IStaking, Ownable {
      * @param amount Number of deposit tokens to unstake / withdraw.
      * @return The total number of distribution tokens rewarded.
      */
-    function _unstake(uint256 amount) private returns (uint256) {
+    function _unstake(uint256 amount) private returns (uint256 rewardAmount) {
         updateAccounting();
 
         // checks
@@ -216,7 +216,6 @@ contract Cascade is IStaking, Ownable {
         // Redeem from most recent stake and go backwards in time.
         uint256 stakingShareSecondsToBurn;
         uint256 sharesLeftToBurn = stakingSharesToBurn;
-        uint256 rewardAmount;
         while (sharesLeftToBurn > 0) {
             Stake storage lastStake = accountStakes[accountStakes.length - 1];
             uint256 stakeTimeSec = now.sub(lastStake.timestampSec);
@@ -259,7 +258,6 @@ contract Cascade is IStaking, Ownable {
 
         require(totalStakingShares == 0 || totalStaked() > 0,
                 "Cascade: Error unstaking. Staking shares exist, but no staking tokens do");
-        return rewardAmount;
     }
 
     /**
@@ -462,14 +460,13 @@ contract Cascade is IStaking, Ownable {
      * @param s Index of the unlock schedule.
      * @return The number of unlocked shares.
      */
-    function unlockScheduleShares(uint256 s) private returns (uint256) {
+    function unlockScheduleShares(uint256 s) private returns (uint256 sharesToUnlock) {
         UnlockSchedule storage schedule = unlockSchedules[s];
 
         if(schedule.unlockedShares >= schedule.initialLockedShares) {
             return 0;
         }
 
-        uint256 sharesToUnlock;
         // Special case to handle any leftover dust from integer division
         if (now >= schedule.endAtSec) {
             sharesToUnlock = (schedule.initialLockedShares.sub(schedule.unlockedShares));
@@ -482,7 +479,6 @@ contract Cascade is IStaking, Ownable {
         }
 
         schedule.unlockedShares = schedule.unlockedShares.add(sharesToUnlock);
-        return sharesToUnlock;
     }
 
     /**
