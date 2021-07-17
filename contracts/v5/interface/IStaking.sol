@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity 0.5.13;
 
 contract IStaking {
     event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
