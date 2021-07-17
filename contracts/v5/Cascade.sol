@@ -312,6 +312,15 @@ contract Cascade is IStaking, Ownable {
         return _stakingPool.balance();
     }
 
+    
+    function userTotals(address addr) public view returns (uint256 _userStakingShares, uint256 _userStakingShareSeconds, uint256 _userLastAccountingTimestampSec) {
+        return (_users[addr].userTotals.stakingShares, _users[addr].userTotals.stakingShareSeconds, _users[addr].userTotals.lastAccountingTimestampSec);
+    }
+
+    function globalTotals() public view returns (uint256 _globalStakingShares, uint256 _globalStakingShareSeconds, uint256 _globalLastAccountingTimestampSec) {
+        return (totalStakingShares, _totalStakingShareSeconds, _lastAccountingTimestampSec);
+    }
+
     /**
      * @dev Note that this application has a staking token as well as a distribution token, which
      * may be different. This function is required by EIP-900.
