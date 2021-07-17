@@ -11,8 +11,8 @@ contract Cascade is IStaking, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
-    event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
+    event Staked(address indexed user, uint256 amount, uint256 total, uint256 timestampSec, uint256 mintedStakingShares);
+    event Unstaked(address indexed user, uint256 amount, uint256 total, uint256 timestampSec);
     event TokensClaimed(address indexed user, uint256 amount);
     event TokensLocked(uint256 amount, uint256 durationSec, uint256 total);
     // amount: Unlocked tokens, total: Total locked tokens
@@ -173,7 +173,7 @@ contract Cascade is IStaking, Ownable {
         // interactions
         _stakingPool.token().safeTransferFrom(msg.sender, address(_stakingPool), amount);
         
-        emit Staked(beneficiary, amount, totalStakedFor(beneficiary), "");
+        emit Staked(beneficiary, amount, totalStakedFor(beneficiary), now, mintedStakingShares);
     }
 
     /**
@@ -253,7 +253,7 @@ contract Cascade is IStaking, Ownable {
         require(_unlockedPool.transfer(msg.sender, rewardAmount),
             'Cascade: transfer out of unlocked pool failed');
 
-        emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), "");
+        emit Unstaked(msg.sender, amount, totalStakedFor(msg.sender), now);
         emit TokensClaimed(msg.sender, rewardAmount);
 
         require(totalStakingShares == 0 || totalStaked() > 0,
