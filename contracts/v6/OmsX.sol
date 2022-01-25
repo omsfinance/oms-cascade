@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract OmsShare is Context, IERC20, Ownable {
+contract OmsX is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -22,7 +22,7 @@ contract OmsShare is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = 'Oms Share';
+    string private _name = 'OMS X';
     string private _symbol = 'OMSX';
     uint8 private _decimals = 9;
 
