@@ -26,13 +26,9 @@ contract OmsX is Context, IERC20, Ownable {
     string private _symbol = 'OMSX';
     uint8 private _decimals = 9;
 
-    constructor (address reserve_) public {
-        require(reserve_ != address(0), 'The address can not be a zero-address');
-        _rOwned[_msgSender()] = _rTotal.div(2);
-        _rOwned[reserve_] = _rTotal.div(2);
-
-        emit Transfer(address(0), _msgSender(), _tTotal.div(2));
-        emit Transfer(address(0), reserve_, _tTotal.div(2));
+    constructor () public {
+        _rOwned[_msgSender()] = _rTotal;
+        emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
     function name() public view returns (string memory) {
