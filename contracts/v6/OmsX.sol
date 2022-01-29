@@ -10,6 +10,8 @@ contract OmsX is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
+    event FeeCollected(uint256 amount, uint256 total, uint256 timestampSec);
+    
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -97,6 +99,7 @@ contract OmsX is Context, IERC20, Ownable {
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rTotal = _rTotal.sub(rAmount);
         _tFeeTotal = _tFeeTotal.add(tAmount);
+        emit FeeCollected(tAmount, _tFeeTotal, now);
     }
 
     function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
@@ -202,6 +205,7 @@ contract OmsX is Context, IERC20, Ownable {
     function _reflectFee(uint256 rFee, uint256 tFee) private {
         _rTotal = _rTotal.sub(rFee);
         _tFeeTotal = _tFeeTotal.add(tFee);
+        emit FeeCollected(tFee, _tFeeTotal, now);
     }
 
     function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256) {
