@@ -11,6 +11,7 @@ contract OmsX is Context, IERC20, Ownable {
     using Address for address;
 
     event FeeCollected(uint256 amount, uint256 total, uint256 timestampSec);
+    event FeeExemptionAccountListUpdated(address indexed user, bool isExemptFromFees, uint256 timestampSec);
     
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -18,6 +19,9 @@ contract OmsX is Context, IERC20, Ownable {
 
     mapping (address => bool) private _isExcluded;
     address[] private _excluded;
+
+    mapping (address => bool) private _isExemptFromFees;
+    address[] private _exemptFromFees;
    
     uint256 private constant MAX = ~uint256(0);
     uint256 private constant _tTotal = 5 * 10**6 * 10**18;
@@ -31,6 +35,10 @@ contract OmsX is Context, IERC20, Ownable {
     constructor () public {
         _rOwned[_msgSender()] = _rTotal;
         emit Transfer(address(0), _msgSender(), _tTotal);
+
+        _isExemptFromFees[_msgSender()] = true;
+        _exemptFromFees.push(_msgSender());
+        emit FeeExemptionAccountListUpdated(_msgSender(), true, now);
     }
 
     function name() public view returns (string memory) {
@@ -88,6 +96,10 @@ contract OmsX is Context, IERC20, Ownable {
         return _isExcluded[account];
     }
 
+    function isExemptFromFees(address account) public view returns (bool) {
+        return _isExemptFromFees[account];
+    }
+
     function totalFees() public view returns (uint256) {
         return _tFeeTotal;
     }
@@ -139,6 +151,26 @@ contract OmsX is Context, IERC20, Ownable {
                 break;
             }
         }
+    }
+
+    function exemptAccountFromFees(address account) external onlyOwner() {
+        require(!_isExemptFromFees[account], "Account is already exempt from fees");
+        _isExemptFromFees[account] = true;
+        _exemptFromFees.push(account);
+        emit FeeExemptionAccountListUpdated(account, true, now);
+    }
+
+    function includeAccountForFees(address account) external onlyOwner() {
+        require(_isExemptFromFees[account], "Account is already included for fees");
+        for (uint256 i = 0; i < _exemptFromFees.length; i++) {
+            if (_exemptFromFees[i] == account) {
+                _exemptFromFees[i] = _exemptFromFees[_exemptFromFees.length - 1];
+                _isExemptFromFees[account] = false;
+                _exemptFromFees.pop();
+                break;
+            }
+        }
+        emit FeeExemptionAccountListUpdated(account, false, now);
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
@@ -215,8 +247,13 @@ contract OmsX is Context, IERC20, Ownable {
         return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee);
     }
 
-    function _getTValues(uint256 tAmount) private pure returns (uint256, uint256) {
-        uint256 tFee = tAmount.div(50);
+    function _getTValues(uint256 tAmount) private view returns (uint256, uint256) {
+        uint256 tFee = 0;
+
+        if (!_isExemptFromFees[_msgSender()]) {    
+            tFee = tAmount.div(50);
+        }
+
         uint256 tTransferAmount = tAmount.sub(tFee);
         return (tTransferAmount, tFee);
     }
