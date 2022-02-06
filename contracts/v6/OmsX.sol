@@ -12,6 +12,7 @@ contract OmsX is Context, IERC20, Ownable {
 
     event FeeCollected(uint256 amount, uint256 total, uint256 timestampSec);
     event FeeExemptionAccountListUpdated(address indexed user, bool isExemptFromFees, uint256 timestampSec);
+    event FeeDenominatorUpdated(uint8 feeDenominator, uint256 timestampSec);
     
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
@@ -31,6 +32,8 @@ contract OmsX is Context, IERC20, Ownable {
     string private _name = 'OMS X';
     string private _symbol = 'OMSX';
     uint8 private _decimals = 18;
+
+    uint8 private _feeDenominator = 50;
 
     constructor () public {
         _rOwned[_msgSender()] = _rTotal;
@@ -102,6 +105,16 @@ contract OmsX is Context, IERC20, Ownable {
 
     function totalFees() public view returns (uint256) {
         return _tFeeTotal;
+    }
+
+    function feeDenominator() public view returns (uint8) {
+        return _feeDenominator;
+    }
+
+    function updateFeeDenominator(uint8 feeDenominator_) external onlyOwner() {
+        require(feeDenominator_ > 0, "Fee Denominator must be greater than 0");
+        _feeDenominator = feeDenominator_;
+        emit FeeDenominatorUpdated(_feeDenominator, now);
     }
 
     function reflect(uint256 tAmount) public {
@@ -251,7 +264,7 @@ contract OmsX is Context, IERC20, Ownable {
         uint256 tFee = 0;
 
         if (!_isExemptFromFees[_msgSender()]) {    
-            tFee = tAmount.div(50);
+            tFee = tAmount.div(_feeDenominator);
         }
 
         uint256 tTransferAmount = tAmount.sub(tFee);
