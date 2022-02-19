@@ -6,33 +6,42 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract OmsShare is Context, IERC20, Ownable {
+contract OmsX is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
+    event FeeCollected(uint256 amount, uint256 total, uint256 timestampSec);
+    event FeeExemptionAccountListUpdated(address indexed user, bool isExemptFromFees, uint256 timestampSec);
+    event FeeDenominatorUpdated(uint8 feeDenominator, uint256 timestampSec);
+    
     mapping (address => uint256) private _rOwned;
     mapping (address => uint256) private _tOwned;
     mapping (address => mapping (address => uint256)) private _allowances;
 
     mapping (address => bool) private _isExcluded;
     address[] private _excluded;
+
+    mapping (address => bool) private _isExemptFromFees;
+    address[] private _exemptFromFees;
    
     uint256 private constant MAX = ~uint256(0);
-    uint256 private constant _tTotal = 10 * 10**6 * 10**9;
+    uint256 private constant _tTotal = 5 * 10**6 * 10**18;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = 'Oms Share';
+    string private _name = 'OMS X';
     string private _symbol = 'OMSX';
-    uint8 private _decimals = 9;
+    uint8 private _decimals = 18;
 
-    constructor (address reserve_) public {
-        require(reserve_ != address(0), 'The address can not be a zero-address');
-        _rOwned[_msgSender()] = _rTotal.div(2);
-        _rOwned[reserve_] = _rTotal.div(2);
+    uint8 private _feeDenominator = 50;
 
-        emit Transfer(address(0), _msgSender(), _tTotal.div(2));
-        emit Transfer(address(0), reserve_, _tTotal.div(2));
+    constructor () public {
+        _rOwned[_msgSender()] = _rTotal;
+        emit Transfer(address(0), _msgSender(), _tTotal);
+
+        _isExemptFromFees[_msgSender()] = true;
+        _exemptFromFees.push(_msgSender());
+        emit FeeExemptionAccountListUpdated(_msgSender(), true, now);
     }
 
     function name() public view returns (string memory) {
@@ -90,8 +99,22 @@ contract OmsShare is Context, IERC20, Ownable {
         return _isExcluded[account];
     }
 
+    function isExemptFromFees(address account) public view returns (bool) {
+        return _isExemptFromFees[account];
+    }
+
     function totalFees() public view returns (uint256) {
         return _tFeeTotal;
+    }
+
+    function feeDenominator() public view returns (uint8) {
+        return _feeDenominator;
+    }
+
+    function updateFeeDenominator(uint8 feeDenominator_) external onlyOwner() {
+        require(feeDenominator_ > 0, "Fee Denominator must be greater than 0");
+        _feeDenominator = feeDenominator_;
+        emit FeeDenominatorUpdated(_feeDenominator, now);
     }
 
     function reflect(uint256 tAmount) public {
@@ -101,6 +124,7 @@ contract OmsShare is Context, IERC20, Ownable {
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _rTotal = _rTotal.sub(rAmount);
         _tFeeTotal = _tFeeTotal.add(tAmount);
+        emit FeeCollected(tAmount, _tFeeTotal, now);
     }
 
     function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
@@ -140,6 +164,26 @@ contract OmsShare is Context, IERC20, Ownable {
                 break;
             }
         }
+    }
+
+    function exemptAccountFromFees(address account) external onlyOwner() {
+        require(!_isExemptFromFees[account], "Account is already exempt from fees");
+        _isExemptFromFees[account] = true;
+        _exemptFromFees.push(account);
+        emit FeeExemptionAccountListUpdated(account, true, now);
+    }
+
+    function includeAccountForFees(address account) external onlyOwner() {
+        require(_isExemptFromFees[account], "Account is already included for fees");
+        for (uint256 i = 0; i < _exemptFromFees.length; i++) {
+            if (_exemptFromFees[i] == account) {
+                _exemptFromFees[i] = _exemptFromFees[_exemptFromFees.length - 1];
+                _isExemptFromFees[account] = false;
+                _exemptFromFees.pop();
+                break;
+            }
+        }
+        emit FeeExemptionAccountListUpdated(account, false, now);
     }
 
     function _approve(address owner, address spender, uint256 amount) private {
@@ -206,6 +250,7 @@ contract OmsShare is Context, IERC20, Ownable {
     function _reflectFee(uint256 rFee, uint256 tFee) private {
         _rTotal = _rTotal.sub(rFee);
         _tFeeTotal = _tFeeTotal.add(tFee);
+        emit FeeCollected(tFee, _tFeeTotal, now);
     }
 
     function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256) {
@@ -215,8 +260,13 @@ contract OmsShare is Context, IERC20, Ownable {
         return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee);
     }
 
-    function _getTValues(uint256 tAmount) private pure returns (uint256, uint256) {
-        uint256 tFee = tAmount.div(50);
+    function _getTValues(uint256 tAmount) private view returns (uint256, uint256) {
+        uint256 tFee = 0;
+
+        if (!_isExemptFromFees[_msgSender()]) {    
+            tFee = tAmount.div(_feeDenominator);
+        }
+
         uint256 tTransferAmount = tAmount.sub(tFee);
         return (tTransferAmount, tFee);
     }
